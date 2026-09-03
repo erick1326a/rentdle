@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent Guesser</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Rent Guesser</h1>
+    </header>
+    <main>
+        <div id="clue-container">
+            <img id="property-image" src="demo-house.jpg" alt="Property Clue">
+            <h2 id="clue-text">Clue 1/5: Exterior</h2>
+        </div>
+        
+        <div id="guess-section">
+			<input type="number" id="guess-input" placeholder="Enter rent in €">
+			<button id="submit-guess">Guess</button>
+			<button id="skip-clue" style="background-color: #555;">Skip</button>
+		</div>
+
+        <div id="history-container">
+            </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
