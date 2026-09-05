@@ -9,23 +9,33 @@
 <body>
     <header>
         <h1>Rent Guesser</h1>
+        <div id="difficulty-selector">
+            <label for="difficulty">Difficulty: </label>
+            <select id="difficulty">
+                <option value="100">Easy (±€100)</option>
+                <option value="50" selected>Normal (±€50)</option>
+                <option value="25">Hard (±€25)</option>
+            </select>
+        </div>
     </header>
     <main>
         <div id="clue-container">
-            <img id="property-image" src="demo-house.jpg" alt="Property Clue">
-            <h2 id="clue-text">Clue 1/5: Exterior</h2>
+            <div id="clue-content"></div>
+            <div id="clue-nav">
+                <button id="prev-clue" disabled>&lt; Prev</button>
+                <span id="clue-tracker">Clue 1</span>
+                <button id="next-clue" disabled>Next &gt;</button>
+            </div>
         </div>
         
         <div id="guess-section">
-			<input type="number" id="guess-input" placeholder="Enter rent in €">
-			<button id="submit-guess">Guess</button>
-			<button id="skip-clue" style="background-color: #555;">Skip</button>
-		</div>
+            <input type="number" id="guess-input" placeholder="Enter rent in €">
+            <button id="submit-guess">Guess</button>
+            <button id="skip-clue" style="background-color: #555;">Skip</button>
+        </div>
 
-        <div id="history-container">
-            </div>
+        <div id="history-container"></div>
     </main>
-
     <script src="script.js"></script>
 </body>
 </html>
