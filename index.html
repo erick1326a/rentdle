@@ -17,9 +17,7 @@
                 <option value="25">Hard (±€25)</option>
             </select>
         </div>
-        <button id="restart-test" style="background-color: #f44336; margin-top: 15px; padding: 8px 16px;">Restart Game (Test)</button>
-    </header>
-    <main>
+        <button id="restart-test" onclick="localStorage.removeItem('rentdleState'); window.location.reload();" style="background-color: #f44336; margin-top: 15px; padding: 8px 16px;">Restart Game (Test)</button>
         <div id="clue-container">
             <div id="clue-content"></div>
             <div id="clue-nav">
