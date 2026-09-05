@@ -18,6 +18,11 @@ const propertyIndex = dateInt % propertiesDatabase.length;
 const propertyData = propertiesDatabase[propertyIndex];
 const maxGuesses = 5;
 
+const resultModal = document.getElementById('result-modal');
+const modalTitle = document.getElementById('modal-title');
+const modalMessage = document.getElementById('modal-message');
+const closeModalBtn = document.getElementById('close-modal');
+
 const clueContent = document.getElementById('clue-content');
 const guessInput = document.getElementById('guess-input');
 const submitBtn = document.getElementById('submit-guess');
@@ -169,19 +174,17 @@ function endGame(isWin) {
     submitBtn.disabled = true;
     skipBtn.disabled = true;
     
-    // Check if result message already exists to avoid duplicates on refresh
-    if (!document.getElementById('result-message')) {
-        const resultMessage = document.createElement('h3');
-        resultMessage.id = 'result-message';
-        if (isWin) {
-            resultMessage.textContent = `You won in ${gameState.guesses.length} guesses!`;
-            resultMessage.style.color = '#4caf50';
-        } else {
-            resultMessage.textContent = `Game Over. The actual rent was €${propertyData.actualRent}.`;
-            resultMessage.style.color = '#f44336';
-        }
-        document.getElementById('clue-container').appendChild(resultMessage);
+    if (isWin) {
+        modalTitle.textContent = "Congratulations!";
+        modalTitle.style.color = '#4caf50';
+        modalMessage.textContent = `You won! The exact rent was €${propertyData.actualRent}.`;
+    } else {
+        modalTitle.textContent = "Game Over";
+        modalTitle.style.color = '#f44336';
+        modalMessage.textContent = `The exact rent was €${propertyData.actualRent}.`;
     }
+    
+    resultModal.classList.remove('hidden');
 }
 
 // Event Listeners
@@ -211,4 +214,7 @@ difficultySelect.addEventListener('change', () => {
     saveState();
 });
 
+closeModalBtn.addEventListener('click', () => {
+    resultModal.classList.add('hidden');
+});
 initGame();
