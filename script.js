@@ -2,8 +2,8 @@ const propertiesDatabase = [
     {
         actualRent: 1500,
         clues: [
-            { type: 'image', src: '03092026.jpg', text: 'Clue 1/5: Exterior' },
-            { type: 'image', src: '03092026_interior.jpg', text: 'Clue 2/5: Interior' }, 
+            { type: 'image', src: '03092026.JPG', text: 'Clue 1/5: Exterior' },
+            { type: 'image', src: '03092026_interior.JPG', text: 'Clue 2/5: Interior' }, 
             { type: 'text', text: 'Clue 3/5: Energy Label A+' },
             { type: 'text', text: 'Clue 4/5: 75m2, 2 Rooms, Delft' },
             { type: 'text', text: 'Clue 5/5: Built in 1750, Semi Furnished' }
