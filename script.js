@@ -212,12 +212,3 @@ difficultySelect.addEventListener('change', () => {
 });
 
 initGame();
-
-// Test Restart Button
-const restartBtn = document.getElementById('restart-test');
-if (restartBtn) {
-    restartBtn.addEventListener('click', () => {
-        localStorage.removeItem('rentdleState');
-        window.location.reload();
-    });
-}
