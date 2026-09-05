@@ -1,57 +1,33 @@
-// Database of properties
 const propertiesDatabase = [
     {
-        actualRent: 1950,
+        actualRent: 1500,
         clues: [
-            { type: 'image', src: '03092026.JPG', text: 'Clue 1/5: Exterior' },
-            { type: 'image', src: '03092026_interior.JPG', text: 'Clue 2/5: Interior' }, 
+            { type: 'image', src: '03092026.jpg', text: 'Clue 1/5: Exterior' },
+            { type: 'image', src: '03092026_interior.jpg', text: 'Clue 2/5: Interior' }, 
             { type: 'text', text: 'Clue 3/5: Energy Label A+' },
             { type: 'text', text: 'Clue 4/5: 75m2, 2 Rooms, Delft' },
             { type: 'text', text: 'Clue 5/5: Built in 1750, Semi Furnished' }
         ]
-    },
-    {
-        actualRent: 2200,
-        clues: [
-            { type: 'text', text: 'Clue 1/5: Modern Apartment Complex' },
-            { type: 'text', text: 'Clue 2/5: Open Kitchen Layout' }, 
-            { type: 'text', text: 'Clue 3/5: Energy Label A++' },
-            { type: 'text', text: 'Clue 4/5: 85m2, 3 Rooms, Amsterdam' },
-            { type: 'text', text: 'Clue 5/5: Built in 2023, Fully Furnished' }
-        ]
-    },
-    {
-        actualRent: 950,
-        clues: [
-            { type: 'text', text: 'Clue 1/5: Brick Row House' },
-            { type: 'text', text: 'Clue 2/5: Studio Layout' }, 
-            { type: 'text', text: 'Clue 3/5: Energy Label C' },
-            { type: 'text', text: 'Clue 4/5: 35m2, 1 Room, Utrecht' },
-            { type: 'text', text: 'Clue 5/5: Built in 1980, Unfurnished' }
-        ]
     }
+    // Add more properties here
 ];
 
-// Unified date handling
 const todayDate = new Date();
-todayDate.setDate(todayDate.getDate() - 1); // Uncomment to test tomorrow
-
-// Generate a deterministic number based on the local date (e.g., 20260903)
 const dateInt = todayDate.getFullYear() * 10000 + (todayDate.getMonth() + 1) * 100 + todayDate.getDate();
-
 const propertyIndex = dateInt % propertiesDatabase.length;
 const propertyData = propertiesDatabase[propertyIndex];
-
 const maxGuesses = 5;
 
-// DOM Elements
-const clueContainer = document.getElementById('clue-container');
+const clueContent = document.getElementById('clue-content');
 const guessInput = document.getElementById('guess-input');
 const submitBtn = document.getElementById('submit-guess');
 const skipBtn = document.getElementById('skip-clue');
 const historyContainer = document.getElementById('history-container');
+const difficultySelect = document.getElementById('difficulty');
+const prevClueBtn = document.getElementById('prev-clue');
+const nextClueBtn = document.getElementById('next-clue');
+const clueTracker = document.getElementById('clue-tracker');
 
-// Local Storage Setup using the unified date
 const dateString = todayDate.toDateString();
 let gameState = JSON.parse(localStorage.getItem('rentdleState'));
 
@@ -60,25 +36,33 @@ if (!gameState || gameState.date !== dateString) {
         date: dateString,
         guesses: [],
         gameOver: false,
-        isWin: false
+        isWin: false,
+        difficulty: '50' 
     };
     saveState();
 }
+
+let viewingClueIndex = gameState.guesses.length;
 
 function saveState() {
     localStorage.setItem('rentdleState', JSON.stringify(gameState));
 }
 
-// Initialize UI on page load
 function initGame() {
+    difficultySelect.value = gameState.difficulty;
+    if (gameState.guesses.length > 0) {
+        difficultySelect.disabled = true; // Lock difficulty after first guess
+    }
+
     gameState.guesses.forEach((g, index) => {
         renderHistoryItem(index + 1, g.guess, g.feedback);
     });
 
+    viewingClueIndex = Math.min(gameState.guesses.length, maxGuesses - 1);
+    updateClueDisplay();
+
     if (gameState.gameOver) {
         endGame(gameState.isWin);
-    } else {
-        showNextClue();
     }
 }
 
@@ -91,10 +75,15 @@ function processGuess() {
         return;
     }
 
-    const difference = guessValue - propertyData.actualRent;
-    let feedback = "";
+    difficultySelect.disabled = true;
+    gameState.difficulty = difficultySelect.value;
     
-    if (difference === 0) feedback = "Correct!";
+    const margin = parseInt(gameState.difficulty);
+    const difference = guessValue - propertyData.actualRent;
+    const absDiff = Math.abs(difference);
+    
+    let feedback = "";
+    if (absDiff <= margin) feedback = "Correct!";
     else if (difference > 0) feedback = "Too high";
     else feedback = "Too low";
 
@@ -104,6 +93,8 @@ function processGuess() {
 
 function skipClue() {
     if (gameState.gameOver) return;
+    difficultySelect.disabled = true;
+    gameState.difficulty = difficultySelect.value;
     handleTurn("Skipped", "-");
 }
 
@@ -114,31 +105,45 @@ function handleTurn(guess, feedback) {
     if (feedback === "Correct!") {
         gameState.isWin = true;
         gameState.gameOver = true;
+        viewingClueIndex = gameState.guesses.length - 1;
+        updateClueDisplay();
         endGame(true);
     } else if (gameState.guesses.length >= maxGuesses) {
         gameState.gameOver = true;
+        viewingClueIndex = maxGuesses - 1;
+        updateClueDisplay();
         endGame(false);
     } else {
-        showNextClue();
+        viewingClueIndex = gameState.guesses.length;
+        updateClueDisplay();
     }
     saveState();
 }
 
-function showNextClue() {
-    const currentClue = propertyData.clues[gameState.guesses.length];
-    clueContainer.innerHTML = '';
+function updateClueDisplay() {
+    const currentClue = propertyData.clues[viewingClueIndex];
+    clueContent.innerHTML = '';
     
     if (currentClue.type === 'image') {
         const img = document.createElement('img');
         img.src = currentClue.src;
         img.id = 'property-image';
-        clueContainer.appendChild(img);
+        clueContent.appendChild(img);
     }
     
     const textNode = document.createElement('h2');
     textNode.id = 'clue-text';
     textNode.textContent = currentClue.text;
-    clueContainer.appendChild(textNode);
+    clueContent.appendChild(textNode);
+
+    // Update navigation state
+    clueTracker.textContent = `Clue ${viewingClueIndex + 1}/${maxGuesses}`;
+    
+    // Max clue user is allowed to see is their current turn, or all if game over
+    const maxAllowedView = gameState.gameOver ? (maxGuesses - 1) : gameState.guesses.length;
+    
+    prevClueBtn.disabled = viewingClueIndex === 0;
+    nextClueBtn.disabled = viewingClueIndex >= maxAllowedView || viewingClueIndex >= (maxGuesses - 1);
 }
 
 function renderHistoryItem(guessNumber, guess, feedback) {
@@ -164,25 +169,46 @@ function endGame(isWin) {
     submitBtn.disabled = true;
     skipBtn.disabled = true;
     
-    const resultMessage = document.createElement('h3');
-    if (isWin) {
-        resultMessage.textContent = `You won in ${gameState.guesses.length} guesses!`;
-        resultMessage.style.color = '#4caf50';
-    } else {
-        resultMessage.textContent = `Game Over. The actual rent was €${propertyData.actualRent}.`;
-        resultMessage.style.color = '#f44336';
+    // Check if result message already exists to avoid duplicates on refresh
+    if (!document.getElementById('result-message')) {
+        const resultMessage = document.createElement('h3');
+        resultMessage.id = 'result-message';
+        if (isWin) {
+            resultMessage.textContent = `You won in ${gameState.guesses.length} guesses!`;
+            resultMessage.style.color = '#4caf50';
+        } else {
+            resultMessage.textContent = `Game Over. The actual rent was €${propertyData.actualRent}.`;
+            resultMessage.style.color = '#f44336';
+        }
+        document.getElementById('clue-container').appendChild(resultMessage);
     }
-    clueContainer.appendChild(resultMessage);
 }
 
 // Event Listeners
 submitBtn.addEventListener('click', processGuess);
 skipBtn.addEventListener('click', skipClue);
 guessInput.addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        processGuess();
+    if (event.key === 'Enter') processGuess();
+});
+
+prevClueBtn.addEventListener('click', () => {
+    if (viewingClueIndex > 0) {
+        viewingClueIndex--;
+        updateClueDisplay();
     }
 });
 
-// Start the game
+nextClueBtn.addEventListener('click', () => {
+    const maxAllowedView = gameState.gameOver ? (maxGuesses - 1) : gameState.guesses.length;
+    if (viewingClueIndex < maxAllowedView) {
+        viewingClueIndex++;
+        updateClueDisplay();
+    }
+});
+
+difficultySelect.addEventListener('change', () => {
+    gameState.difficulty = difficultySelect.value;
+    saveState();
+});
+
 initGame();
