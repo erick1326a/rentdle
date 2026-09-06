@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rent Guesser</title>
+    <title>Rentdle</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
-        <h1>Rent Guesser</h1>
+        <h1>Rentdle</h1>
         <div id="difficulty-selector">
             <label for="difficulty">Difficulty: </label>
             <select id="difficulty">
@@ -17,9 +17,23 @@
                 <option value="25">Hard (±€25)</option>
             </select>
         </div>
-        <button id="restart-test" onclick="localStorage.removeItem('rentdleState'); window.location.reload();" style="background-color: #f44336; margin-top: 15px; padding: 8px 16px;">Restart Game (Test)</button>
+        <p id="puzzle-date" aria-live="polite"></p>
+        <details id="test-panel" hidden>
+            <summary>Test puzzles</summary>
+            <p id="test-note"></p>
+            <label for="test-date">Preview date</label>
+            <input type="date" id="test-date">
+            <div class="test-actions">
+                <button id="previous-date" type="button">Previous day</button>
+                <button id="open-preview" type="button">Preview date</button>
+                <button id="next-date" type="button">Next day</button>
+                <button id="restart-preview" type="button">Restart preview</button>
+                <button id="return-today" type="button">Return to daily game</button>
+            </div>
+        </details>
     </header>
     <main>
+        <p id="save-notice" role="status"></p>
         <div id="clue-container">
             <div id="clue-content"></div>
             <div id="clue-nav">
@@ -36,14 +50,34 @@
         </div>
 
         <div id="history-container"></div>
-        <div id="result-modal" class="hidden">
+        <button id="show-result" class="hidden" type="button">View result</button>
+        <dialog id="result-modal" aria-labelledby="modal-title" aria-describedby="modal-message">
             <div class="modal-content">
+                <p class="result-eyebrow" id="result-eyebrow">TODAY’S RENTDLE</p>
                 <h2 id="modal-title"></h2>
                 <p id="modal-message"></p>
-                <button id="close-modal">Close</button>
+                <section class="property-reveal" aria-labelledby="result-property-title">
+                    <h3 id="result-property-title"></h3>
+                    <p id="result-rent"></p>
+                    <p id="result-rent-note"></p>
+                    <ul id="result-details"></ul>
+                    <a id="listing-link" target="_blank" rel="noopener noreferrer" hidden>View property listing ↗</a>
+                    <p id="listing-unavailable" hidden>No listing link has been added for this property.</p>
+                </section>
+                <div class="result-actions">
+                    <button id="share-result" type="button">Share result</button>
+                    <button id="close-modal" type="button">Close</button>
+                </div>
+                <p id="share-status" role="status" aria-live="polite"></p>
+                <div id="manual-share" hidden>
+                    <label for="share-text">Copy your result</label>
+                    <textarea id="share-text" readonly rows="5"></textarea>
+                </div>
             </div>
-        </div>
+        </dialog>
     </main>
+    <script src="properties.js"></script>
+    <script src="schedule.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
