@@ -1,22 +1,86 @@
-const propertiesDatabase = [
-    {
-        actualRent: 1500,
-        clues: [
-            { type: 'image', src: '03092026.JPG', text: 'Clue 1/5: Exterior' },
-            { type: 'image', src: '03092026_interior.JPG', text: 'Clue 2/5: Interior' }, 
-            { type: 'text', text: 'Clue 3/5: Energy Label A+' },
-            { type: 'text', text: 'Clue 4/5: 75m2, 2 Rooms, Delft' },
-            { type: 'text', text: 'Clue 5/5: Built in 1750, Semi Furnished' }
-        ]
-    }
-    // Add more properties here
-];
+// Optional: set the public website address here when testing locally.
+const PUBLIC_SITE_URL = "https://erick1326a.github.io/rentdle/";
 
-const todayDate = new Date();
-const dateInt = todayDate.getFullYear() * 10000 + (todayDate.getMonth() + 1) * 100 + todayDate.getDate();
-const propertyIndex = dateInt % propertiesDatabase.length;
-const propertyData = propertiesDatabase[propertyIndex];
+function amsterdamDate(now = new Date()) {
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(now);
+    const part = type => parts.find(p => p.type === type).value;
+    return `${part('year')}-${part('month')}-${part('day')}`;
+}
+
+function validDate(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return false;
+    const date = new Date(value + 'T12:00:00Z');
+    return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function offsetDate(value, days) {
+    const date = new Date(value + 'T12:00:00Z');
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+}
+
+const pageUrl = new URL(window.location.href);
+const isTestMode = pageUrl.searchParams.get('test') === '1';
+const todayId = amsterdamDate();
+const requestedDate = pageUrl.searchParams.get('date');
+const puzzleId = isTestMode && validDate(requestedDate) ? requestedDate : todayId;
+const scheduledId = puzzleSchedule[puzzleId];
+const matches = propertiesDatabase.filter(property => property.id === scheduledId);
+const candidate = matches.length === 1 ? matches[0] : null;
+const propertyData = candidate && Number.isFinite(candidate.actualRent) && candidate.actualRent > 0 &&
+    Array.isArray(candidate.clues) && candidate.clues.length === 5 &&
+    candidate.clues.every(clue => clue && ['image', 'text'].includes(clue.type) && typeof clue.text === 'string')
+    ? candidate : null;
 const maxGuesses = 5;
+const storageKey = `rentdle:${isTestMode ? 'preview' : 'daily'}:${puzzleId}`;
+
+function dateStillCurrent() {
+    if (!isTestMode && amsterdamDate() !== puzzleId) {
+        window.location.reload();
+        return false;
+    }
+    return true;
+}
+
+function previewDate(date) {
+    if (!validDate(date)) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('test', '1');
+    url.searchParams.set('date', date);
+    window.location.assign(url.href);
+}
+
+function setupTestPanel() {
+    const local = pageUrl.protocol === 'file:' || ['localhost', '127.0.0.1', '[::1]'].includes(pageUrl.hostname);
+    document.getElementById('test-panel').hidden = !local && !isTestMode;
+    document.getElementById('puzzle-date').textContent = `${isTestMode ? 'TEST MODE · Preview' : 'Daily puzzle'} · ${puzzleId}`;
+    document.getElementById('test-date').value = puzzleId;
+    document.getElementById('test-panel').open = isTestMode;
+    document.getElementById('test-note').textContent = isTestMode
+        ? 'Test mode: preview progress is separate from your daily game.'
+        : 'Choose a date to enter test mode. Your daily progress stays saved.';
+    document.getElementById('restart-preview').disabled = !isTestMode || !propertyData;
+    document.getElementById('previous-date').addEventListener('click', () => previewDate(offsetDate(puzzleId, -1)));
+    document.getElementById('next-date').addEventListener('click', () => previewDate(offsetDate(puzzleId, 1)));
+    document.getElementById('test-date').addEventListener('change', event => previewDate(event.target.value));
+    document.getElementById('open-preview').addEventListener('click', () => previewDate(document.getElementById('test-date').value));
+    document.getElementById('restart-preview').addEventListener('click', () => {
+        if (!isTestMode) return;
+        gameState = freshState();
+        saveState();
+        if (resultModal.open) resultModal.close();
+        initGame();
+    });
+    document.getElementById('return-today').addEventListener('click', () => {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('test');
+        url.searchParams.delete('date');
+        window.location.assign(url.href);
+    });
+}
+
 
 const resultModal = document.getElementById('result-modal');
 const modalTitle = document.getElementById('modal-title');
@@ -33,46 +97,76 @@ const prevClueBtn = document.getElementById('prev-clue');
 const nextClueBtn = document.getElementById('next-clue');
 const clueTracker = document.getElementById('clue-tracker');
 
-const dateString = todayDate.toDateString();
-let gameState = JSON.parse(localStorage.getItem('rentdleState'));
-
-if (!gameState || gameState.date !== dateString) {
-    gameState = {
-        date: dateString,
-        guesses: [],
-        gameOver: false,
-        isWin: false,
-        difficulty: '50' 
-    };
-    saveState();
+function freshState() {
+    return { puzzleId, propertyId: propertyData?.id || null, guesses: [], gameOver: false, isWin: false, difficulty: '50' };
 }
 
-let viewingClueIndex = gameState.guesses.length;
+function loadState() {
+    const clean = freshState();
+    if (!propertyData) return clean;
+    try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        if (!saved || saved.puzzleId !== puzzleId || saved.propertyId !== propertyData.id ||
+            !['25', '50', '100'].includes(saved.difficulty) || !Array.isArray(saved.guesses) ||
+            saved.guesses.length > maxGuesses) return clean;
+        clean.difficulty = saved.difficulty;
+        for (const entry of saved.guesses) {
+            if (!entry || clean.gameOver) return freshState();
+            const guess = entry.guess;
+            if (guess !== 'Skipped' && (!Number.isFinite(guess) || guess <= 0)) return freshState();
+            const difference = guess - propertyData.actualRent;
+            const feedback = guess === 'Skipped' ? '-' : Math.abs(difference) <= Number(clean.difficulty)
+                ? 'Correct!' : difference > 0 ? 'Too high' : 'Too low';
+            clean.guesses.push({ guess, feedback });
+            clean.isWin = feedback === 'Correct!';
+            clean.gameOver = clean.isWin || clean.guesses.length === maxGuesses;
+        }
+        return clean;
+    } catch (_) { return clean; }
+}
+
+let gameState = loadState();
+let viewingClueIndex = 0;
 
 function saveState() {
-    localStorage.setItem('rentdleState', JSON.stringify(gameState));
+    if (!propertyData) return;
+    try { localStorage.setItem(storageKey, JSON.stringify(gameState)); }
+    catch (_) {
+        document.getElementById('save-notice').textContent = 'Progress cannot be saved in this browser. You can still play this visit.';
+    }
 }
 
 function initGame() {
+    historyContainer.replaceChildren();
+    clueContent.replaceChildren();
+    document.getElementById('show-result').classList.add('hidden');
+    guessInput.value = '';
+    guessInput.disabled = !propertyData;
+    submitBtn.disabled = !propertyData;
+    skipBtn.disabled = !propertyData;
     difficultySelect.value = gameState.difficulty;
-    if (gameState.guesses.length > 0) {
-        difficultySelect.disabled = true; // Lock difficulty after first guess
+    difficultySelect.disabled = !propertyData || gameState.guesses.length > 0;
+    if (!propertyData) {
+        const message = document.createElement('h2');
+        message.textContent = 'No puzzle scheduled';
+        const explanation = document.createElement('p');
+        explanation.textContent = isTestMode ? `No playable property is assigned to ${puzzleId}. Choose another date.` : 'There is no puzzle available for today. Please check back later.';
+        clueContent.appendChild(message);
+        clueContent.appendChild(explanation);
+        clueTracker.textContent = 'No clues available';
+        prevClueBtn.disabled = true;
+        nextClueBtn.disabled = true;
+        return;
     }
-
-    gameState.guesses.forEach((g, index) => {
-        renderHistoryItem(index + 1, g.guess, g.feedback);
-    });
-
+    gameState.guesses.forEach((g, index) => renderHistoryItem(index + 1, g.guess, g.feedback));
     viewingClueIndex = Math.min(gameState.guesses.length, maxGuesses - 1);
     updateClueDisplay();
-
-    if (gameState.gameOver) {
-        endGame(gameState.isWin);
-    }
+    if (gameState.gameOver) endGame(gameState.isWin);
 }
 
+
 function processGuess() {
-    if (gameState.gameOver) return;
+    if (!dateStillCurrent() || !propertyData || gameState.gameOver) return;
 
     const guessValue = parseInt(guessInput.value);
     if (isNaN(guessValue) || guessValue <= 0) {
@@ -97,7 +191,7 @@ function processGuess() {
 }
 
 function skipClue() {
-    if (gameState.gameOver) return;
+    if (!dateStillCurrent() || !propertyData || gameState.gameOver) return;
     difficultySelect.disabled = true;
     gameState.difficulty = difficultySelect.value;
     handleTurn("Skipped", "-");
@@ -170,22 +264,94 @@ function renderHistoryItem(guessNumber, guess, feedback) {
 }
 
 function endGame(isWin) {
+    if (!propertyData) return;
+    document.getElementById('result-eyebrow').textContent = (isTestMode ? 'TEST MODE' : 'RENTDLE') + ' · ' + puzzleId;
     guessInput.disabled = true;
     submitBtn.disabled = true;
     skipBtn.disabled = true;
-    
-    if (isWin) {
-        modalTitle.textContent = "Congratulations!";
-        modalTitle.style.color = '#4caf50';
-        modalMessage.textContent = `You won! The exact rent was €${propertyData.actualRent}.`;
-    } else {
-        modalTitle.textContent = "Game Over";
-        modalTitle.style.color = '#f44336';
-        modalMessage.textContent = `The exact rent was €${propertyData.actualRent}.`;
-    }
-    
-    resultModal.classList.remove('hidden');
+    const difficulty = { '100': 'Easy', '50': 'Normal', '25': 'Hard' }[gameState.difficulty];
+    modalTitle.textContent = isWin ? 'You found the rent!' : 'The rent, revealed';
+    modalTitle.style.color = isWin ? '#86efac' : '#ffffff';
+    modalMessage.textContent = isWin
+        ? `${gameState.guesses.length}/${maxGuesses} attempts · ${difficulty} · Nicely done!`
+        : `${maxGuesses}/${maxGuesses} attempts · ${difficulty} · Thanks for playing.`;
+    document.getElementById('result-property-title').textContent = propertyData.title || 'Today’s property';
+    document.getElementById('result-rent').textContent = new Intl.NumberFormat('en-IE', {
+        style: 'currency', currency: 'EUR', maximumFractionDigits: 0
+    }).format(propertyData.actualRent) + ' / month';
+    document.getElementById('result-rent-note').textContent = propertyData.rentNote || 'Advertised monthly rent.';
+    const details = document.getElementById('result-details');
+    details.replaceChildren();
+    propertyData.clues.filter(clue => clue.type === 'text').forEach(clue => {
+        const item = document.createElement('li');
+        item.textContent = clue.text.replace(/^Clue\s+\d+\/\d+:\s*/i, '');
+        details.appendChild(item);
+    });
+    const link = document.getElementById('listing-link');
+    let listingUrl = null;
+    try {
+        const url = new URL(propertyData.listingUrl);
+        if (['https:', 'http:'].includes(url.protocol)) listingUrl = url.href;
+    } catch (_) { /* A listing link is optional. */ }
+    link.hidden = !listingUrl;
+    if (listingUrl) link.href = listingUrl;
+    else link.removeAttribute('href');
+    document.getElementById('listing-unavailable').hidden = Boolean(listingUrl);
+    document.getElementById('show-result').classList.remove('hidden');
+    document.getElementById('share-status').textContent = '';
+    document.getElementById('manual-share').hidden = true;
+    if (!resultModal.open) resultModal.showModal();
+    document.getElementById('share-result').focus();
 }
+
+function getShareUrl() {
+    try {
+        const url = new URL(PUBLIC_SITE_URL || window.location.href);
+        if (!['https:', 'http:'].includes(url.protocol) ||
+            /^(localhost|127(?:\.\d+){3}|\[::1\]|0\.0\.0\.0)$/i.test(url.hostname) ||
+            url.hostname.endsWith('.localhost')) return '';
+        // Never include query parameters, fragments, or credentials in shared links.
+        return url.origin + url.pathname;
+    } catch (_) { return ''; }
+}
+
+function buildShareText() {
+    const difficulty = { '100': 'Easy', '50': 'Normal', '25': 'Hard' }[gameState.difficulty];
+    const date = puzzleId;
+    const score = gameState.isWin ? gameState.guesses.length : 'X';
+    const squares = gameState.guesses.map(g => g.feedback === 'Correct!' ? '🟩' : g.guess === 'Skipped' ? '⬜' : '🟥').join('');
+    return [`Rentdle${isTestMode ? " TEST" : ""} · ${date}`, `${score}/${maxGuesses} · ${difficulty}`, squares, getShareUrl()].filter(Boolean).join('\n');
+}
+
+async function shareResult() {
+    if (!dateStillCurrent() || !propertyData || !gameState.gameOver) return;
+    const button = document.getElementById('share-result');
+    const status = document.getElementById('share-status');
+    const text = buildShareText();
+    const localNote = getShareUrl() ? '' : ' A website link will be included once Rentdle is hosted.';
+    button.disabled = true;
+    status.textContent = '';
+    document.getElementById('manual-share').hidden = true;
+    try {
+        // Copy directly; do not open the operating system sharing panel.
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            try {
+                await navigator.clipboard.writeText(text);
+                status.textContent = 'Result copied! Paste it into a message.' + localNote;
+                return;
+            } catch (_) { /* Manual copying also works without clipboard permission. */ }
+        }
+        document.getElementById('manual-share').hidden = false;
+        const field = document.getElementById('share-text');
+        field.value = text;
+        field.focus();
+        field.select();
+        status.textContent = 'Select and copy the result below.' + localNote;
+    } finally {
+        button.disabled = false;
+    }
+}
+
 
 // Event Listeners
 submitBtn.addEventListener('click', processGuess);
@@ -195,6 +361,7 @@ guessInput.addEventListener('keypress', function(event) {
 });
 
 prevClueBtn.addEventListener('click', () => {
+    if (!dateStillCurrent() || !propertyData) return;
     if (viewingClueIndex > 0) {
         viewingClueIndex--;
         updateClueDisplay();
@@ -202,6 +369,7 @@ prevClueBtn.addEventListener('click', () => {
 });
 
 nextClueBtn.addEventListener('click', () => {
+    if (!dateStillCurrent() || !propertyData) return;
     const maxAllowedView = gameState.gameOver ? (maxGuesses - 1) : gameState.guesses.length;
     if (viewingClueIndex < maxAllowedView) {
         viewingClueIndex++;
@@ -210,11 +378,24 @@ nextClueBtn.addEventListener('click', () => {
 });
 
 difficultySelect.addEventListener('change', () => {
+    if (!dateStillCurrent() || !propertyData) return;
     gameState.difficulty = difficultySelect.value;
     saveState();
 });
 
 closeModalBtn.addEventListener('click', () => {
-    resultModal.classList.add('hidden');
+    resultModal.close();
+    document.getElementById('show-result').focus();
 });
+document.getElementById('share-result').addEventListener('click', shareResult);
+document.getElementById('show-result').addEventListener('click', () => {
+    if (dateStillCurrent() && propertyData && gameState.gameOver) endGame(gameState.isWin);
+});
+resultModal.addEventListener('close', () => document.getElementById('show-result').focus());
+setupTestPanel();
 initGame();
+setInterval(dateStillCurrent, 30000);
+window.addEventListener('focus', dateStillCurrent);
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) dateStillCurrent();
+});
