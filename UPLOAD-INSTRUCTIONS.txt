@@ -1,0 +1,1 @@
+Extract these files into your existing Rentdle folder. Replace properties.js and schedule.js, and add all photos. Upload the same files to your GitHub repository root. Keep your existing photos. This update requires the version of index.html that loads properties.js.
