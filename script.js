@@ -21,23 +21,22 @@ function offsetDate(value, days) {
     return date.toISOString().slice(0, 10);
 }
 
+const player = window.RentdlePlayer;
 const pageUrl = new URL(window.location.href);
 const isTestMode = pageUrl.searchParams.get('test') === '1';
+const isPracticeMode = !isTestMode && pageUrl.searchParams.get('mode') === 'practice';
+const isDailyMode = !isTestMode && !isPracticeMode;
 const todayId = amsterdamDate();
 const requestedDate = pageUrl.searchParams.get('date');
-const puzzleId = isTestMode && validDate(requestedDate) ? requestedDate : todayId;
-const scheduledId = puzzleSchedule[puzzleId];
-const matches = propertiesDatabase.filter(property => property.id === scheduledId);
-const candidate = matches.length === 1 ? matches[0] : null;
-const propertyData = candidate && Number.isFinite(candidate.actualRent) && candidate.actualRent > 0 &&
-    Array.isArray(candidate.clues) && candidate.clues.length === 5 &&
-    candidate.clues.every(clue => clue && ['image', 'text'].includes(clue.type) && typeof clue.text === 'string')
-    ? candidate : null;
+const practiceDates = player.archive(puzzleSchedule, propertiesDatabase, todayId);
+const puzzleId = isTestMode && validDate(requestedDate) ? requestedDate
+    : isPracticeMode ? (requestedDate || practiceDates[0] || todayId) : todayId;
+const propertyData = isPracticeMode && !practiceDates.includes(puzzleId) ? null : player.playable(puzzleSchedule[puzzleId], propertiesDatabase);
 const maxGuesses = 5;
-const storageKey = `rentdle:${isTestMode ? 'preview' : 'daily'}:${puzzleId}`;
+const storageKey = `rentdle:${isTestMode ? 'preview' : isPracticeMode ? 'practice' : 'daily'}:${puzzleId}`;
 
 function dateStillCurrent() {
-    if (!isTestMode && amsterdamDate() !== puzzleId) {
+    if (isDailyMode && amsterdamDate() !== puzzleId) {
         window.location.reload();
         return false;
     }
@@ -47,6 +46,7 @@ function dateStillCurrent() {
 function previewDate(date) {
     if (!validDate(date)) return;
     const url = new URL(window.location.href);
+    url.searchParams.delete('mode');
     url.searchParams.set('test', '1');
     url.searchParams.set('date', date);
     window.location.assign(url.href);
@@ -55,7 +55,7 @@ function previewDate(date) {
 function setupTestPanel() {
     const local = pageUrl.protocol === 'file:' || ['localhost', '127.0.0.1', '[::1]'].includes(pageUrl.hostname);
     document.getElementById('test-panel').hidden = !local && !isTestMode;
-    document.getElementById('puzzle-date').textContent = `${isTestMode ? 'TEST MODE · Preview' : 'Daily puzzle'} · ${puzzleId}`;
+    document.getElementById('puzzle-date').textContent = `${isTestMode ? 'TEST MODE · Preview' : isPracticeMode ? 'Practice' : 'Daily puzzle'} · ${puzzleId}`;
     document.getElementById('test-date').value = puzzleId;
     document.getElementById('test-panel').open = isTestMode;
     document.getElementById('test-note').textContent = isTestMode
@@ -75,6 +75,7 @@ function setupTestPanel() {
     });
     document.getElementById('return-today').addEventListener('click', () => {
         const url = new URL(window.location.href);
+        url.searchParams.delete('mode');
         url.searchParams.delete('test');
         url.searchParams.delete('date');
         window.location.assign(url.href);
@@ -148,9 +149,9 @@ function initGame() {
     difficultySelect.disabled = !propertyData || gameState.guesses.length > 0;
     if (!propertyData) {
         const message = document.createElement('h2');
-        message.textContent = 'No puzzle scheduled';
+        message.textContent = isPracticeMode ? 'Practice puzzle unavailable' : 'No puzzle scheduled';
         const explanation = document.createElement('p');
-        explanation.textContent = isTestMode ? `No playable property is assigned to ${puzzleId}. Choose another date.` : 'There is no puzzle available for today. Please check back later.';
+        explanation.textContent = isPracticeMode ? 'Choose an older puzzle from the practice menu. Today’s and future properties are reserved for the daily game.' : isTestMode ? `No playable property is assigned to ${puzzleId}. Choose another date.` : 'There is no puzzle available for today. Please check back later.';
         clueContent.appendChild(message);
         clueContent.appendChild(explanation);
         clueTracker.textContent = 'No clues available';
@@ -265,7 +266,7 @@ function renderHistoryItem(guessNumber, guess, feedback) {
 
 function endGame(isWin) {
     if (!propertyData) return;
-    document.getElementById('result-eyebrow').textContent = (isTestMode ? 'TEST MODE' : 'RENTDLE') + ' · ' + puzzleId;
+    document.getElementById('result-eyebrow').textContent = (isTestMode ? 'TEST MODE' : isPracticeMode ? 'PRACTICE' : 'RENTDLE') + ' · ' + puzzleId;
     guessInput.disabled = true;
     submitBtn.disabled = true;
     skipBtn.disabled = true;
@@ -320,7 +321,7 @@ function buildShareText() {
     const date = puzzleId;
     const score = gameState.isWin ? gameState.guesses.length : 'X';
     const squares = gameState.guesses.map(g => g.feedback === 'Correct!' ? '🟩' : g.guess === 'Skipped' ? '⬜' : '🟥').join('');
-    return [`Rentdle${isTestMode ? " TEST" : ""} · ${date}`, `${score}/${maxGuesses} · ${difficulty}`, squares, getShareUrl()].filter(Boolean).join('\n');
+    return [`Rentdle${isTestMode ? " TEST" : isPracticeMode ? " PRACTICE" : ""} · ${date}`, `${score}/${maxGuesses} · ${difficulty}`, squares, getShareUrl()].filter(Boolean).join('\n');
 }
 
 async function shareResult() {
@@ -350,6 +351,95 @@ async function shareResult() {
     } finally {
         button.disabled = false;
     }
+}
+
+
+function collectStatistics() {
+    const records={};
+    try {
+        for(let i=0;i<localStorage.length;i++){
+            const key=localStorage.key(i);
+            if(!/^rentdle:daily:\d{4}-\d{2}-\d{2}$/.test(key||''))continue;
+            try{records[key.slice('rentdle:daily:'.length)]=JSON.parse(localStorage.getItem(key));}catch(_){}
+        }
+    } catch(_) {
+        document.getElementById('statistics-note').textContent='Browser storage is unavailable. Only this visit’s daily result can be shown.';
+    }
+    if(isDailyMode&&propertyData)records[puzzleId]=gameState;
+    return player.statistics(records,amsterdamDate());
+}
+
+function renderStatistics() {
+    const stats=collectStatistics();
+    for(const [id,value] of [['stat-played',stats.played],['stat-win-rate',stats.winRate+'%'],['stat-current',stats.current],['stat-best',stats.best]])document.getElementById(id).textContent=value;
+    const chart=document.getElementById('attempt-distribution');chart.replaceChildren();
+    const max=Math.max(1,...stats.distribution);
+    stats.distribution.forEach((count,index)=>{
+        const row=document.createElement('div');row.className='distribution-row';
+        const label=document.createElement('span');label.textContent=String(index+1);
+        const track=document.createElement('div');track.className='distribution-track';
+        const bar=document.createElement('div');bar.className='distribution-bar';bar.style.width=`${count/max*100}%`;
+        const value=document.createElement('span');value.textContent=String(count);
+        row.setAttribute('aria-label',`${index+1} ${index===0?'attempt':'attempts'}: ${count} wins`);
+        track.appendChild(bar);row.append(label,track,value);chart.appendChild(row);
+    });
+    document.getElementById('statistics-empty').hidden=stats.played>0;
+}
+
+function goDaily() {
+    const url=new URL(window.location.href);['test','mode','date'].forEach(key=>url.searchParams.delete(key));window.location.assign(url.href);
+}
+
+function goPractice(date) {
+    const eligible=player.archive(puzzleSchedule,propertiesDatabase,amsterdamDate());
+    if(!eligible.includes(date))return;
+    const url=new URL(window.location.href);url.searchParams.delete('test');url.searchParams.set('mode','practice');url.searchParams.set('date',date);window.location.assign(url.href);
+}
+
+function setupPlayerFeatures() {
+    document.getElementById('daily-button').addEventListener('click',goDaily);
+    document.getElementById('daily-button').setAttribute('aria-pressed',String(isDailyMode));
+    const practiceButton=document.getElementById('practice-button');practiceButton.disabled=!practiceDates.length;practiceButton.setAttribute('aria-pressed',String(isPracticeMode));
+    practiceButton.addEventListener('click',()=>goPractice(practiceDates[0]));
+    const select=document.getElementById('practice-date');
+    practiceDates.forEach(date=>{const option=document.createElement('option');option.value=date;option.textContent=date;select.appendChild(option)});
+    select.value=practiceDates.includes(puzzleId)?puzzleId:practiceDates[0]||'';
+    select.addEventListener('change',()=>goPractice(select.value));
+    document.getElementById('practice-controls').hidden=!isPracticeMode;
+    document.getElementById('practice-empty').hidden=practiceDates.length>0;
+    document.getElementById('practice-restart').disabled=!propertyData;
+    document.getElementById('practice-restart').addEventListener('click',()=>{
+        if(!isPracticeMode||!propertyData)return;gameState=freshState();saveState();if(resultModal.open)resultModal.close();initGame();
+    });
+    function another(){const dates=player.archive(puzzleSchedule,propertiesDatabase,amsterdamDate()).filter(d=>d!==puzzleId);if(dates.length)goPractice(dates[Math.floor(Math.random()*dates.length)]);}
+    document.getElementById('practice-another').disabled=practiceDates.filter(d=>d!==puzzleId).length===0;
+    document.getElementById('practice-another').addEventListener('click',another);
+    document.getElementById('result-practice').disabled=!practiceDates.length;
+    document.getElementById('result-practice').textContent=isPracticeMode?'Replay this practice puzzle':'Play an older puzzle';
+    document.getElementById('result-practice').addEventListener('click',()=>{
+        if(isPracticeMode){document.getElementById('practice-restart').click();return;}
+        if(practiceDates.length)goPractice(practiceDates[0]);
+    });
+    const dialog=document.getElementById('statistics-modal');let statsTrigger=null;
+    for(const id of ['statistics-button','result-statistics']){
+        document.getElementById(id).addEventListener('click',()=>{
+            if(!dateStillCurrent())return;statsTrigger=document.getElementById(id);renderStatistics();if(!dialog.open)dialog.showModal();document.getElementById('close-statistics').focus();
+        });
+    }
+    document.getElementById('close-statistics').addEventListener('click',()=>dialog.close());
+    dialog.addEventListener('close',()=>statsTrigger?.focus());
+    window.addEventListener('storage',()=>{if(dialog.open)renderStatistics();});
+    let target=player.nextPuzzle(puzzleSchedule,propertiesDatabase),lastDay=amsterdamDate();
+    function tick(){
+        const now=new Date(),day=amsterdamDate(now);
+        if(day!==lastDay){lastDay=day;target=player.nextPuzzle(puzzleSchedule,propertiesDatabase,now);if(!dateStillCurrent())return;}
+        let text='The next daily puzzle hasn’t been scheduled yet.';
+        if(target){const seconds=Math.max(0,Math.ceil((target.time-now.getTime())/1000));const days=Math.floor(seconds/86400);const h=String(Math.floor(seconds%86400/3600)).padStart(2,'0'),m=String(Math.floor(seconds%3600/60)).padStart(2,'0'),s=String(seconds%60).padStart(2,'0');text=`Next daily puzzle · ${target.date} · ${days?days+'d ':''}${h}:${m}:${s}`;}
+        document.getElementById('next-puzzle').textContent=text;
+        document.getElementById('result-countdown').textContent=text;
+    }
+    tick();setInterval(tick,1000);window.addEventListener('focus',tick);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
 }
 
 
@@ -393,6 +483,7 @@ document.getElementById('show-result').addEventListener('click', () => {
 });
 resultModal.addEventListener('close', () => document.getElementById('show-result').focus());
 setupTestPanel();
+setupPlayerFeatures();
 initGame();
 setInterval(dateStillCurrent, 30000);
 window.addEventListener('focus', dateStillCurrent);

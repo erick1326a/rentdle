@@ -9,6 +9,11 @@
 <body>
     <header>
         <h1>Rentdle</h1>
+        <nav class="game-menu" aria-label="Game modes">
+            <button id="daily-button" type="button">Daily</button>
+            <button id="practice-button" type="button">Practice</button>
+            <button id="statistics-button" type="button">Statistics</button>
+        </nav>
         <div id="difficulty-selector">
             <label for="difficulty">Difficulty: </label>
             <select id="difficulty">
@@ -34,6 +39,12 @@
     </header>
     <main>
         <p id="save-notice" role="status"></p>
+        <section id="practice-controls" hidden aria-label="Practice puzzles">
+            <p>Practice · Replay older puzzles without changing your daily statistics.</p>
+            <label for="practice-date">Puzzle date</label><select id="practice-date"></select>
+            <div class="practice-actions"><button id="practice-restart">Restart practice</button><button id="practice-another">Another puzzle</button></div>
+        </section>
+        <p id="practice-empty" hidden>Practice unlocks once an older daily puzzle is available.</p>
         <div id="clue-container">
             <div id="clue-content"></div>
             <div id="clue-nav">
@@ -50,6 +61,7 @@
         </div>
 
         <div id="history-container"></div>
+        <p id="next-puzzle" class="countdown" role="timer" aria-live="off"></p>
         <button id="show-result" class="hidden" type="button">View result</button>
         <dialog id="result-modal" aria-labelledby="modal-title" aria-describedby="modal-message">
             <div class="modal-content">
@@ -68,6 +80,8 @@
                     <button id="share-result" type="button">Share result</button>
                     <button id="close-modal" type="button">Close</button>
                 </div>
+                <div class="after-game-actions"><button id="result-practice">Play an older puzzle</button><button id="result-statistics">Daily statistics</button></div>
+                <p id="result-countdown" class="countdown" role="timer" aria-live="off"></p>
                 <p id="share-status" role="status" aria-live="polite"></p>
                 <div id="manual-share" hidden>
                     <label for="share-text">Copy your result</label>
@@ -75,9 +89,26 @@
                 </div>
             </div>
         </dialog>
+        <dialog id="statistics-modal" aria-labelledby="statistics-title" aria-describedby="statistics-note">
+            <div class="modal-content">
+                <p class="result-eyebrow">YOUR DAILY RECORD</p><h2 id="statistics-title">Statistics</h2>
+                <p id="statistics-note">Completed daily games · All difficulties · Saved in this browser.</p>
+                <div class="statistics-grid">
+                    <div><strong id="stat-played">0</strong><span>Played</span></div>
+                    <div><strong id="stat-win-rate">0%</strong><span>Win rate</span></div>
+                    <div><strong id="stat-current">0</strong><span>Current streak</span></div>
+                    <div><strong id="stat-best">0</strong><span>Best streak</span></div>
+                </div>
+                <h3>Winning attempts</h3><div id="attempt-distribution"></div>
+                <p id="statistics-empty">Finish a daily puzzle to start your record.</p>
+                <p class="statistics-footnote">Streaks count consecutive calendar days won. Skips use an attempt. Practice and test games never count.</p>
+                <button id="close-statistics">Close statistics</button>
+            </div>
+        </dialog>
     </main>
     <script src="properties.js"></script>
     <script src="schedule.js"></script>
+    <script src="player-core.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
