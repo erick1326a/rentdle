@@ -12,23 +12,27 @@ const propertiesDatabase = [
                 "text": "Clue 1/5: Exterior"
             },
             {
-                "type": "image",
-                "src": "03092026_interior.JPG",
-                "text": "Clue 2/5: Interior"
+                "type": "text",
+                "text": "Clue 2/5: City: Delft"
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: Energy Label A+"
+                "text": "Clue 3/5: 75m2, 2 Rooms, Delft"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: 75m2, 2 Rooms, Delft"
+                "text": "Clue 4/5: Built in 1750, Semi Furnished"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Built in 1750, Semi Furnished"
+                "text": "Clue 5/5: Energy label: A+"
             }
-        ]
+        ],
+        "details": {
+            "city": "Delft",
+            "energyLabel": "A+"
+        },
+        "clueLayout": "location-second"
     },
     {
         "id": "knuttelstraat-18",
@@ -43,23 +47,27 @@ const propertiesDatabase = [
                 "text": "Clue 1/5: Exterior"
             },
             {
-                "type": "image",
-                "src": "knuttelstraat-18-interior.JPG",
-                "text": "Clue 2/5: Interior"
+                "type": "text",
+                "text": "Clue 2/5: City: Delft"
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: Energy label E"
+                "text": "Clue 3/5: 77 m², 4 rooms (3 bedrooms), Delft"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: 77 m², 4 rooms (3 bedrooms), Delft"
+                "text": "Clue 4/5: Built in 1962, furnished"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Built in 1962, furnished"
+                "text": "Clue 5/5: Energy label: E"
             }
-        ]
+        ],
+        "details": {
+            "city": "Delft",
+            "energyLabel": "E"
+        },
+        "clueLayout": "location-second"
     },
     {
         "id": "deinzestraat",
@@ -74,23 +82,27 @@ const propertiesDatabase = [
                 "text": "Clue 1/5: Exterior"
             },
             {
-                "type": "image",
-                "src": "deinzestraat-interior.JPG",
-                "text": "Clue 2/5: Interior"
+                "type": "text",
+                "text": "Clue 2/5: City: Breda"
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: Energy label B"
+                "text": "Clue 3/5: 100 m², 5 rooms, Breda"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: 100 m², 5 rooms, Breda"
+                "text": "Clue 4/5: Built in 1966, upholstered or furnished"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Built in 1966, upholstered or furnished"
+                "text": "Clue 5/5: Energy label: B"
             }
-        ]
+        ],
+        "details": {
+            "city": "Breda",
+            "energyLabel": "B"
+        },
+        "clueLayout": "location-second"
     },
     {
         "id": "patrijsstraat",
@@ -105,23 +117,27 @@ const propertiesDatabase = [
                 "text": "Clue 1/5: Exterior"
             },
             {
-                "type": "image",
-                "src": "patrijsstraat-interior.JPG",
-                "text": "Clue 2/5: Interior"
+                "type": "text",
+                "text": "Clue 2/5: City: Breda"
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: Energy label D"
+                "text": "Clue 3/5: 86 m², 4 rooms (3 bedrooms), Breda"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: 86 m², 4 rooms (3 bedrooms), Breda"
+                "text": "Clue 4/5: Built in 1938, upholstered"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Built in 1938, upholstered"
+                "text": "Clue 5/5: Energy label: D"
             }
-        ]
+        ],
+        "details": {
+            "city": "Breda",
+            "energyLabel": "D"
+        },
+        "clueLayout": "location-second"
     },
     {
         "id": "lichtstraat-139-eindhoven",
@@ -141,7 +157,8 @@ const propertiesDatabase = [
             "furnishing": "Furnished",
             "listingUrl": "https://www.funda.nl/detail/huur/eindhoven/appartement-lichtstraat-139/80949789/",
             "rentNote": "Base rent",
-            "notes": "Headline: EUR 2300/month including EUR 200 service costs. Description: EUR 2100 including service costs, plus EUR 200 utilities/internet; optional parking EUR 100. Confirm the intended rent and update the rent explanation. Temporary nine-month rental."
+            "notes": "Headline: EUR 2300/month including EUR 200 service costs. Description: EUR 2100 including service costs, plus EUR 200 utilities/internet; optional parking EUR 100. Confirm the intended rent and update the rent explanation. Temporary nine-month rental.",
+            "features": "Optional parking available"
         },
         "clues": [
             {
@@ -150,23 +167,23 @@ const propertiesDatabase = [
                 "text": "Clue 1/5: Exterior"
             },
             {
-                "type": "image",
-                "src": "lichtstraat-139-eindhoven-interior.jpg",
-                "text": "Clue 2/5: Interior"
+                "type": "text",
+                "text": "Clue 2/5: City: Eindhoven"
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: Eindhoven"
+                "text": "Clue 3/5: 100 m², 3 rooms (2 bedrooms)"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: 100 m², 3 rooms (2 bedrooms)"
+                "text": "Clue 4/5: Built in 2003, Furnished"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Built in 2003, Furnished"
+                "text": "Clue 5/5: Optional parking available"
             }
-        ]
+        ],
+        "clueLayout": "location-second"
     },
     {
         "id": "walserijstraat-14-eindhoven",
@@ -186,7 +203,8 @@ const propertiesDatabase = [
             "furnishing": "Partially upholstered (gestoffeerd)",
             "listingUrl": "https://www.funda.nl/detail/huur/eindhoven/appartement-walserijstraat-14/44586195/",
             "rentNote": "Monthly base rent excluding EUR 65 service costs.",
-            "notes": "Photos may depict similar apartments rather than this exact property. Includes flooring and painted walls; furniture is not supplied."
+            "notes": "Photos may depict similar apartments rather than this exact property. Includes flooring and painted walls; furniture is not supplied.",
+            "features": "Flooring and painted walls included; furniture is not supplied"
         },
         "clues": [
             {
@@ -195,23 +213,23 @@ const propertiesDatabase = [
                 "text": "Clue 1/5: Exterior"
             },
             {
-                "type": "image",
-                "src": "walserijstraat-14-eindhoven-interior.jpg",
-                "text": "Clue 2/5: Interior"
+                "type": "text",
+                "text": "Clue 2/5: City: Eindhoven"
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: Eindhoven"
+                "text": "Clue 3/5: 66 m², 2 rooms (1 bedrooms)"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: 66 m², 2 rooms (1 bedrooms)"
+                "text": "Clue 4/5: Built in 2020, Partially upholstered (gestoffeerd)"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Built in 2020, Partially upholstered (gestoffeerd)"
+                "text": "Clue 5/5: Flooring and painted walls included; furniture is not supplied"
             }
-        ]
+        ],
+        "clueLayout": "location-second"
     },
     {
         "id": "flevoparkweg-60-amsterdam",
@@ -240,22 +258,22 @@ const propertiesDatabase = [
                 "text": "Clue 1/5: Exterior"
             },
             {
-                "type": "image",
-                "src": "flevoparkweg-60-amsterdam-interior.jpg",
-                "text": "Clue 2/5: Interior"
+                "type": "text",
+                "text": "Clue 2/5: City: Amsterdam"
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: Amsterdam"
+                "text": "Clue 3/5: 90 m², 3 rooms (2 bedrooms), Amsterdam"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: 90 m², 3 rooms (2 bedrooms), Amsterdam"
+                "text": "Clue 4/5: Built in 2002, Furnished"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Built in 2002, Furnished"
+                "text": "Clue 5/5: Energy label: B"
             }
-        ]
+        ],
+        "clueLayout": "location-second"
     }
 ];

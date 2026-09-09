@@ -128,6 +128,13 @@ function loadState() {
 
 let gameState = loadState();
 let viewingClueIndex = 0;
+let clueMap = null;
+
+function clearClue() {
+    clueMap?.remove();
+    clueMap = null;
+    clueContent.replaceChildren();
+}
 
 function saveState() {
     if (!propertyData) return;
@@ -139,7 +146,7 @@ function saveState() {
 
 function initGame() {
     historyContainer.replaceChildren();
-    clueContent.replaceChildren();
+    clearClue();
     document.getElementById('show-result').classList.add('hidden');
     guessInput.value = '';
     guessInput.disabled = !propertyData;
@@ -222,13 +229,20 @@ function handleTurn(guess, feedback) {
 
 function updateClueDisplay() {
     const currentClue = propertyData.clues[viewingClueIndex];
-    clueContent.innerHTML = '';
+    clearClue();
     
     if (currentClue.type === 'image') {
         const img = document.createElement('img');
         img.src = currentClue.src;
         img.id = 'property-image';
+        img.alt = currentClue.text.replace(/^Clue\s+\d+\/\d+:\s*/i, '');
         clueContent.appendChild(img);
+    }
+    if (currentClue.type === 'map') {
+        const host = document.createElement('div');
+        host.className = 'map-clue-host';
+        clueContent.appendChild(host);
+        clueMap = window.RentdleMaps.mount(host, {coordinates:propertyData.coordinates});
     }
     
     const textNode = document.createElement('h2');

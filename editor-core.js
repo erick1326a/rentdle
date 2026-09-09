@@ -1,6 +1,7 @@
 (function(root) {
     'use strict';
-    const fields = ['title','city','rent','area','rooms','bedrooms','energyLabel','yearBuilt','furnishing','listingUrl','rentNote','notes'];
+    const maps = typeof module==='object' ? require('./map-core.js').RentdleMapCore : root.RentdleMapCore;
+    const fields = ['title','city','rent','area','rooms','bedrooms','energyLabel','yearBuilt','furnishing','features','listingUrl','rentNote','notes','latitude','longitude'];
     function parse(text) {
         text = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
         const parsed = JSON.parse(text);
@@ -10,7 +11,7 @@
             if (!row || typeof row !== 'object' || Array.isArray(row)) throw Error(`Property ${index + 1} must be an object.`);
             const result = {};
             fields.forEach(key => {
-                const value = row[key];
+                const value = row[key] ?? (['latitude','longitude'].includes(key) ? row.coordinates?.[key] : undefined);
                 if (value != null && !['number','string'].includes(typeof value)) throw Error(`Property ${index + 1}: ${key} must be text or a number.`);
                 result[key] = value == null ? '' : String(value);
             });
@@ -23,14 +24,46 @@
     }
     function id(row) { return (row.title+'-'+row.city).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,90); }
     function clues(row) {
-        return [row.energyLabel ? `Energy label ${row.energyLabel}` : 'Energy label not provided',
-            [row.area ? `${row.area} m²` : 'Area not provided',row.rooms ? `${row.rooms} rooms${row.bedrooms ? ` (${row.bedrooms} bedrooms)` : ''}` : 'Room count not provided',row.city].filter(Boolean).join(', '),
-            [row.yearBuilt ? `Built in ${row.yearBuilt}` : 'Construction year not provided',row.furnishing || 'Furnishing not provided'].join(', ')];
+        return [[row.area ? `${row.area} m²` : 'Area not provided',row.rooms ? `${row.rooms} rooms${row.bedrooms ? ` (${row.bedrooms} ${Number(row.bedrooms)===1?'bedroom':'bedrooms'})` : ''}` : 'Room count not provided'].filter(Boolean).join(', '),
+            [row.yearBuilt ? `Built in ${row.yearBuilt}` : 'Construction year not provided',row.furnishing || 'Furnishing not provided'].join(', '),
+            finalClue(row)];
     }
+    function finalClue(row) {
+        if(row.features?.trim())return row.features.trim();
+        if(row.energyLabel?.trim() && !/^(not provided|unknown|unspecified|n\/?a)$/i.test(row.energyLabel.trim()))return `Energy label: ${row.energyLabel.trim()}`;
+        return 'Additional features not provided';
+    }
+    function hasCoordinates(value) {return ['latitude','longitude'].some(key=>value?.[key]!=null && String(value[key]).trim()!=='');}
     function validDate(date) { const d=new Date(date+'T12:00:00Z'); return /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(d.getTime()) && d.toISOString().slice(0,10)===date; }
+    function withMap(property, value) {
+        const coordinates = maps.coordinates(value);
+        if (hasCoordinates(value) && !coordinates) throw Error('Enter both valid coordinates, or leave both blank to use the city name.');
+        const exterior = property.clues.find(c=>c.type==='image');
+        const texts = property.clues.filter(c=>c.type==='text');
+        if (!exterior) throw Error('A puzzle needs an exterior photo.');
+        const strip=text=>text.replace(/^Clue\s+\d+\/\d+:\s*/i,'');
+        const details={...property.details};
+        const city=details.city || property.title?.split(' · ')[1] || strip(texts.find(c=>/^City:/i.test(strip(c.text)))?.text || '').replace(/^City:\s*/i,'');
+        const fallback={type:'text',text:city?`City: ${city}`:'City not provided'};
+        let facts;
+        if(property.clueLayout==='location-second')facts=property.clues.slice(2);
+        else {
+            const area=texts.find(c=>/m²|m2|rooms|area not provided/i.test(c.text));
+            const built=texts.find(c=>/Built in|Construction year/i.test(c.text));
+            const energy=texts.find(c=>/Energy label/i.test(c.text));
+            if(!details.energyLabel && energy)details.energyLabel=strip(energy.text).replace(/^Energy label\s*:?\s*/i,'');
+            facts=[area || {type:'text',text:clues(details)[0]}, built || {type:'text',text:clues(details)[1]}, {type:'text',text:finalClue(details)}];
+        }
+        if(facts.length!==3 || facts.some(c=>c.type!=='text'))throw Error('A puzzle needs three text clues after its location clue.');
+        const ordered = [exterior, coordinates?{type:'map',text:'Neighbourhood'}:fallback, ...facts]
+            .map((clue,i)=>({...clue,text:`Clue ${i+1}/5: ${clue.text.replace(/^Clue\s+\d+\/\d+:\s*/i,'')}`}));
+        delete details.latitude;delete details.longitude;
+        const result={...property,clueLayout:'location-second',details:{...details,...coordinates},clues:ordered};
+        if(coordinates)result.coordinates=coordinates;else delete result.coordinates;
+        return result;
+    }
     function validate(drafts, catalog, schedule) {
         const errors=[];const ids=new Set(catalog.map(p=>p.id));const urls=new Set(catalog.map(p=>url(p.listingUrl)).filter(Boolean));const dates=new Set(Object.keys(schedule));
-        if (!drafts.length) return ['Paste at least one property first.'];
         drafts.forEach((d,i)=>{
             const r=d.row, label=`Property ${i+1} (${r.title || 'untitled'})`;
             const check=(ok,message)=>{if(!ok) errors.push(`${label}: ${message}`)};
@@ -45,7 +78,8 @@
             }
             if(r.rooms && r.bedrooms)check(Number(r.bedrooms)<=Number(r.rooms),'bedrooms cannot exceed total rooms.');
             check(d.clues.length===3 && d.clues.every(c=>c.trim()),'fill in all three text clues.');
-            check(d.images.length===2 && d.images.every(Boolean),'choose both photos.');
+            check(!hasCoordinates(r)||Boolean(maps.coordinates(r)),'enter both valid coordinates, or leave both blank to use the city name.');
+            check(d.images.length===1 && d.images.every(Boolean),'choose an exterior photo.');
             d.images.filter(Boolean).forEach(f=>check(['image/jpeg','image/png','image/webp'].includes(f.type)&&f.size>0&&f.size<=15*1024*1024,'photos must be JPG, PNG or WebP, up to 15 MB each.'));
             if(d.date){check(validDate(d.date),'choose a valid puzzle date.');check(!dates.has(d.date),`${d.date} already has a puzzle. Choose another date.`);dates.add(d.date);}
         });return errors;
@@ -60,7 +94,7 @@
                 if(catalog.some(p=>p.clues?.some(c=>c.src===name)))throw Error(`Photo filename already exists: ${name}`);
                 images.push({name,file});return {type:'image',src:name,text:`Clue ${i+1}/5: ${i===0?'Exterior':'Interior'}`};
             });
-            properties.push({id:key,actualRent:Number(d.row.rent),title:`${d.row.title} · ${d.row.city}`,listingUrl:url(d.row.listingUrl),rentNote:d.row.rentNote,details:{...d.row},clues:[...photoClues,...d.clues.map((text,i)=>({type:'text',text:`Clue ${i+3}/5: ${text}`}))]});
+            properties.push(withMap({id:key,clueLayout:'location-second',actualRent:Number(d.row.rent),title:`${d.row.title} · ${d.row.city}`,listingUrl:url(d.row.listingUrl),rentNote:d.row.rentNote,details:{...d.row},clues:[...photoClues,{type:'text',text:'Location'},...d.clues.map(text=>({type:'text',text}))]}, d.row));
             if(d.date)assignments[d.date]=key;
         });
         const files=[{name:'properties.js',data:'const propertiesDatabase = '+JSON.stringify(properties,null,4)+';\n'}, {name:'schedule.js',data:'// Puzzle dates use Europe/Amsterdam time.\nconst puzzleSchedule = '+JSON.stringify(Object.fromEntries(Object.entries(assignments).sort()),null,4)+';\n'}];
@@ -82,5 +116,5 @@
         e.setUint32(0,0x06054b50,true);e.setUint16(8,entries.length,true);e.setUint16(10,entries.length,true);e.setUint32(12,size,true);e.setUint32(16,offset,true);
         return new Blob([...chunks,...central,end],{type:'application/zip'});
     }
-    root.PropertyEditor={parse,clues,id,url,validate,build,zip};
+    root.PropertyEditor={parse,clues,id,url,validDate,withMap,validate,build,zip};
 })(typeof module==='object'?module.exports:window);

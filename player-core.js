@@ -1,5 +1,6 @@
 (function(root) {
     'use strict';
+    const maps = typeof module==='object' ? require('./map-core.js').RentdleMapCore : root.RentdleMapCore;
     function dateKey(now=new Date()) {
         const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Amsterdam',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
         const get=key=>parts.find(p=>p.type===key).value;
@@ -9,7 +10,7 @@
     function previousDay(value) {const d=new Date(value+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10);}
     function playable(id,properties) {
         const matches=properties.filter(p=>p.id===id),p=matches.length===1?matches[0]:null;
-        return p&&Number.isFinite(p.actualRent)&&p.actualRent>0&&Array.isArray(p.clues)&&p.clues.length===5&&p.clues.every(c=>c&&['image','text'].includes(c.type)&&typeof c.text==='string')?p:null;
+        return p&&Number.isFinite(p.actualRent)&&p.actualRent>0&&Array.isArray(p.clues)&&p.clues.length===5&&p.clues.every(c=>c&&['image','text','map'].includes(c.type)&&typeof c.text==='string'&&(c.type!=='map'||maps.coordinates(p.coordinates)))?p:null;
     }
     function archive(schedule,properties,today) {
         const unreleased=new Set(Object.entries(schedule).filter(([date])=>validDate(date)&&date>=today).map(([,id])=>id));

@@ -1,0 +1,15 @@
+.map-clue-host { width:100%; min-width:0; }
+.rentdle-map-frame { box-sizing:border-box; width:100%; border:1px solid #385443; border-radius:8px; overflow:hidden; margin-top:12px; }
+.rentdle-map { height:300px; height:clamp(230px,38svh,320px); width:100%; background:#dce6df; color:#142619; text-align:left; isolation:isolate; color-scheme:light; }
+.map-credit { background:#fff; color:#222; text-align:right; padding:5px 8px; font:12px/1.5 system-ui,sans-serif; }
+.map-credit a { color:#245c40; text-decoration:underline; }
+.map-status { font-size:13px; line-height:1.5; margin:8px 0; }
+.map-status:empty { display:none; }
+.coordinate-fields { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.location-editor { margin:20px 0; }
+.rentdle-pin { background:transparent; border:0; }
+.rentdle-pin span { display:block; box-sizing:border-box; width:28px; height:28px; border:3px solid #fff; border-radius:50% 50% 50% 0; background:#256b48; transform:rotate(-45deg); box-shadow:0 2px 5px #0008; }
+.rentdle-pin span::after { content:''; position:absolute; width:8px; height:8px; top:7px; left:7px; border-radius:50%; background:white; }
+.rentdle-map .leaflet-control-zoom a { color:#172b1d; background:white; text-decoration:none; }
+.rentdle-map img.leaflet-tile { border:0; border-radius:0; }
+@media(max-width:480px) { .coordinate-fields { grid-template-columns:1fr; gap:12px; } }
