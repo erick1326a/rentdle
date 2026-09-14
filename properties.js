@@ -259,33 +259,33 @@ const propertiesDatabase = [
         ]
     },
     {
-        "id": "leidsestraat-108-c-amsterdam",
+        "id": "gerard-philipslaan-153-eindhoven",
         "clueLayout": "location-second",
-        "actualRent": 2650,
-        "title": "Leidsestraat 108-C · Amsterdam",
-        "listingUrl": "https://www.funda.nl/detail/huur/amsterdam/appartement-leidsestraat-108-c/44596268/",
-        "rentNote": "Monthly base rent excluding EUR 85 service costs and gas, water and electricity. Total including service costs: EUR 2735.",
+        "actualRent": 1330,
+        "title": "Gerard Philipslaan 153 · Eindhoven",
+        "listingUrl": "https://www.funda.nl/detail/huur/eindhoven/appartement-gerard-philipslaan-153/44445883/",
+        "rentNote": "Advertised rent of €1,330/month excludes €120/month service costs: €1,450 combined. Utility costs are not specified.",
         "details": {
-            "title": "Leidsestraat 108-C",
-            "city": "Amsterdam",
-            "rent": "2650",
-            "area": "91",
-            "rooms": "3",
-            "bedrooms": "2",
-            "energyLabel": "A",
-            "yearBuilt": "1900",
-            "furnishing": "Unfurnished (gestoffeerd)",
-            "features": "Stained-glass windows, built-in kitchen appliances and a separate storage room",
-            "listingUrl": "https://www.funda.nl/detail/huur/amsterdam/appartement-leidsestraat-108-c/44596268/",
-            "rentNote": "Monthly base rent excluding EUR 85 service costs and gas, water and electricity. Total including service costs: EUR 2735.",
-            "notes": "The description specifies EUR 85 service costs, although the summary marks service costs as unknown. Available from 1 October 2026.",
-            "latitude": 52.364578,
-            "longitude": 4.883249
+            "title": "Gerard Philipslaan 153",
+            "city": "Eindhoven",
+            "rent": "1330",
+            "area": "72",
+            "rooms": "2",
+            "bedrooms": "1",
+            "energyLabel": "A++",
+            "yearBuilt": "2012",
+            "furnishing": "Partially furnished, kitchen only",
+            "features": "Balcony, lift, private parking space in the garage, basement storage and underfloor heating.",
+            "listingUrl": "https://www.funda.nl/detail/huur/eindhoven/appartement-gerard-philipslaan-153/44445883/",
+            "rentNote": "Advertised rent of €1,330/month excludes €120/month service costs: €1,450 combined. Utility costs are not specified.",
+            "notes": "Living area is approximately 72 m². Furnishing is not specified. A private parking space is described, but any separate parking charge is not stated.",
+            "latitude": 51.4435,
+            "longitude": 5.463999
         },
         "clues": [
             {
                 "type": "image",
-                "src": "leidsestraat-108-c-amsterdam-exterior.jpg",
+                "src": "gerard-philipslaan-153-eindhoven-exterior.jpg",
                 "text": "Clue 1/5: Exterior"
             },
             {
@@ -294,50 +294,50 @@ const propertiesDatabase = [
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: 91 m², 3 rooms (2 bedrooms)"
+                "text": "Clue 3/5: 72 m², 2 rooms (1 bedroom)"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: Built in 1900, Unfurnished (gestoffeerd)"
+                "text": "Clue 4/5: Built in 2012, Partially furnished, kitchen only"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Stained-glass windows, built-in kitchen appliances and a separate storage room"
+                "text": "Clue 5/5: Balcony, lift, private parking space in the garage, basement storage and underfloor heating."
             }
         ],
         "coordinates": {
-            "latitude": 52.364578,
-            "longitude": 4.883249
+            "latitude": 51.4435,
+            "longitude": 5.463999
         }
     },
     {
-        "id": "laan-van-meerdervoort-55-e2-den-haag",
+        "id": "kastanjelaan-1-135-eindhoven",
         "clueLayout": "location-second",
-        "actualRent": 1950,
-        "title": "Laan van Meerdervoort 55-E2 · Den Haag",
-        "listingUrl": "https://www.funda.nl/detail/huur/den-haag/appartement-laan-van-meerdervoort-55-e2/44581146/",
-        "rentNote": "Advertised monthly rent. Service costs and utility inclusions are unspecified.",
+        "actualRent": 1895,
+        "title": "Kastanjelaan 1-135 · Eindhoven",
+        "listingUrl": "https://www.funda.nl/detail/huur/eindhoven/appartement-kastanjelaan-1-135/80959227/",
+        "rentNote": "Advertised rent of €2,223/month includes €328/month service costs. Base rent calculated from these figures is €1,895. The utility breakdown is not specified; parking costs extra.",
         "details": {
-            "title": "Laan van Meerdervoort 55-E2",
-            "city": "Den Haag",
-            "rent": "1950",
-            "area": "116",
-            "rooms": "1",
+            "title": "Kastanjelaan 1-135",
+            "city": "Eindhoven",
+            "rent": "1895",
+            "area": "149",
+            "rooms": "2",
             "bedrooms": "1",
-            "energyLabel": "Unknown",
-            "yearBuilt": "1955",
-            "furnishing": "Empty",
-            "features": "Lift access, private storage and communal parking for one car with no assigned space",
-            "listingUrl": "https://www.funda.nl/detail/huur/den-haag/appartement-laan-van-meerdervoort-55-e2/44581146/",
-            "rentNote": "Advertised monthly rent. Service costs and utility inclusions are unspecified.",
-            "notes": "Verify room count: Funda lists 1 room including 1 bedroom despite an area of 116 m². Furnishing and energy label are not provided. The description covers the wider apartment complex and says photos are indicative. Available from 1 October 2026.",
-            "latitude": 52.084493,
-            "longitude": 4.292501
+            "energyLabel": "A+++",
+            "yearBuilt": "1920",
+            "furnishing": "Furnished",
+            "features": "Two-level loft with a walk-in wardrobe, shared rooftop terrace, communal courtyard and underground bicycle storage.",
+            "listingUrl": "https://www.funda.nl/detail/huur/eindhoven/appartement-kastanjelaan-1-135/80959227/",
+            "rentNote": "Advertised rent of €2,223/month includes €328/month service costs. Base rent calculated from these figures is €1,895. The utility breakdown is not specified; parking costs extra.",
+            "notes": "Converted apartment in the former Philips Bedrijfsschool. Construction year refers to the original building. Shared rooftop terrace is confirmed; the separate balcony entry does not clarify whether a private balcony belongs to this unit.",
+            "latitude": 51.443708,
+            "longitude": 5.458592
         },
         "clues": [
             {
                 "type": "image",
-                "src": "laan-van-meerdervoort-55-e2-den-haag-exterior.jpg",
+                "src": "kastanjelaan-1-135-eindhoven-exterior.jpg",
                 "text": "Clue 1/5: Exterior"
             },
             {
@@ -346,20 +346,20 @@ const propertiesDatabase = [
             },
             {
                 "type": "text",
-                "text": "Clue 3/5: 116 m², 1 rooms (1 bedroom)"
+                "text": "Clue 3/5: 149 m², 2 rooms (1 bedroom)"
             },
             {
                 "type": "text",
-                "text": "Clue 4/5: Built in 1955, Empty"
+                "text": "Clue 4/5: Built in 1920, Furnished"
             },
             {
                 "type": "text",
-                "text": "Clue 5/5: Lift access, private storage and communal parking for one car with no assigned space"
+                "text": "Clue 5/5: Two-level loft with a walk-in wardrobe, shared rooftop terrace, communal courtyard and underground bicycle storage."
             }
         ],
         "coordinates": {
-            "latitude": 52.084493,
-            "longitude": 4.292501
+            "latitude": 51.443708,
+            "longitude": 5.458592
         }
     }
 ];
